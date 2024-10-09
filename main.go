@@ -10,11 +10,6 @@ import (
 	"math/rand"
 )
 
-// Values are the values
-type Values struct {
-	Values [Samples]float64
-}
-
 func main() {
 	rng := rand.New(rand.NewSource(1))
 	inputs := NewMatrix(Samples, Samples)
