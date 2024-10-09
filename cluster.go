@@ -15,14 +15,8 @@ import (
 )
 
 const (
-	// Size is the link size
-	Size = 4
-	// Input is the network input size
-	Input = Size
 	// Scale is the scale of the search
-	Scale = 33 //48 96
-	// Width is the width of the result
-	Width = 150
+	Scale = 17
 	// Samples is the number of samplee
 	Samples = Scale * (Scale - 1) / 2
 )
@@ -150,7 +144,7 @@ type Sample struct {
 }
 
 // Process processes the samples' the probability distribution
-func Process(rng *rand.Rand, input Matrix, fisher []Fisher) []float64 {
+func Process(rng *rand.Rand, input Matrix) Matrix {
 	projections := make([]RandomMatrix, Scale)
 	for i := range projections {
 		seed := rng.Int63()
@@ -198,27 +192,11 @@ func Process(rng *rand.Rand, input Matrix, fisher []Fisher) []float64 {
 		<-done
 	}
 
-	sums := make([]float64, Width)
+	outputs := NewZeroMatrix(Samples, Samples)
 	for i := range samples {
-		for j := range samples[i].Ranks {
-			sums[j] += samples[i].Ranks[j]
+		for j, value := range samples[i].Ranks {
+			outputs.Data[j*Samples+i] = complex(value, 0)
 		}
 	}
-	averages := make([]float64, Width)
-	for i := range sums {
-		averages[i] = sums[i] / float64(len(samples))
-	}
-	variances := make([]float64, Width)
-	for i := range averages {
-		for j := range samples[i].Ranks {
-			diff := averages[j] - samples[i].Ranks[j]
-			variances[j] += diff * diff
-		}
-	}
-
-	/*for i, item := range fisher {
-		fmt.Println(item.Label, variances[i])
-	}*/
-
-	return variances
+	return outputs
 }
