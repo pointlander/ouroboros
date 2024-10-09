@@ -4,6 +4,14 @@
 
 package main
 
+// Fisher is the fisher iris data
+type Fisher struct {
+	Measures []float64
+	Label    string
+	Cluster  int
+	Index    int
+}
+
 func main() {
 
 }
