@@ -62,8 +62,14 @@ func main() {
 		entropy = -entropy
 		entropy /= float64(outputs.Rows)
 		fmt.Println(i, entropy, min, max)
-		for j := 0; j < Samples*Samples/2; j++ {
-			outputs.Data[rng.Intn(Samples*Samples)] = complex(0, 0)
+		if i < 10 {
+			value := 0.0
+			if i%2 == 1 {
+				value = 1
+			}
+			for j := 0; j < Samples*Samples/2; j++ {
+				outputs.Data[rng.Intn(Samples*Samples)] = complex(value, 0)
+			}
 		}
 		inputs = outputs
 	}
