@@ -195,7 +195,7 @@ func Process(rng *rand.Rand, input Matrix) Matrix {
 	outputs := NewZeroMatrix(Samples, Samples)
 	for i := range samples {
 		for j, value := range samples[i].Ranks {
-			outputs.Data[j*Samples+i] = complex(value, 0)
+			outputs.Data[i*Samples+j] = complex(value, 0)
 		}
 	}
 	return outputs
