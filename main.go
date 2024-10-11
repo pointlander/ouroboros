@@ -5,16 +5,25 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 )
 
+var (
+	// FlagPlot plot the results as a histogram
+	FlagPlot = flag.Bool("plot", false, "plot the results as a histogram")
+)
+
 func main() {
+	flag.Parse()
+
 	rng := rand.New(rand.NewSource(1))
 	inputs := NewMatrix(Samples, Samples)
 	for i := 0; i < Samples*Samples; i++ {
@@ -46,18 +55,39 @@ func main() {
 			}
 			samples = append(samples, -rowEntropy)
 		}
-		p := plot.New()
-		p.Title.Text = "entropy"
 
-		histogram, err := plotter.NewHist(samples, 100)
-		if err != nil {
-			panic(err)
+		{
+			sort.Slice(samples, func(i, j int) bool {
+				return samples[i] < samples[j]
+			})
+			min, max = samples[0], samples[len(samples)-1]
+			window := (max - min) / 100.0
+		outer:
+			for i, start := range samples {
+				for j := i + 8; j < len(samples); j++ {
+					end := samples[j]
+					if (end - start) < window {
+						fmt.Println("fire", start, end)
+						break outer
+					}
+				}
+			}
 		}
-		p.Add(histogram)
 
-		err = p.Save(8*vg.Inch, 8*vg.Inch, fmt.Sprintf("output/%d_entropy.png", i))
-		if err != nil {
-			panic(err)
+		if *FlagPlot {
+			p := plot.New()
+			p.Title.Text = "entropy"
+
+			histogram, err := plotter.NewHist(samples, 100)
+			if err != nil {
+				panic(err)
+			}
+			p.Add(histogram)
+
+			err = p.Save(8*vg.Inch, 8*vg.Inch, fmt.Sprintf("output/%d_entropy.png", i))
+			if err != nil {
+				panic(err)
+			}
 		}
 		entropy = -entropy
 		entropy /= float64(outputs.Rows)
