@@ -68,7 +68,7 @@ func main() {
 				value = 1
 			}
 			for j := 0; j < Samples*Samples/2; j++ {
-				outputs.Data[rng.Intn(Samples*Samples)] = complex(value, 0)
+				outputs.Data[rng.Intn(Samples*Samples)] *= complex(value, 0)
 			}
 		}
 		inputs = outputs
