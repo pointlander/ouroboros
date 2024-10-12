@@ -147,8 +147,17 @@ func main() {
 				dat[y*width+x] = float64(img.Gray.GrayAt(x, y).Y) / 255
 			}
 		}
-		left.Input <- dat
-		right.Input <- dat
-		forward.Input <- dat
+		select {
+		case left.Input <- dat:
+		default:
+		}
+		select {
+		case right.Input <- dat:
+		default:
+		}
+		select {
+		case forward.Input <- dat:
+		default:
+		}
 	}
 }
