@@ -11,6 +11,9 @@ import (
 	"math/rand"
 	"sort"
 
+	htgotts "github.com/hegedustibor/htgo-tts"
+	handlers "github.com/hegedustibor/htgo-tts/handlers"
+	voices "github.com/hegedustibor/htgo-tts/voices"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
@@ -23,6 +26,9 @@ var (
 
 func main() {
 	flag.Parse()
+
+	speech := htgotts.Speech{Folder: "audio", Language: voices.English, Handler: &handlers.Native{}}
+	speech.Speak("Starting...")
 
 	rng := rand.New(rand.NewSource(1))
 	inputs := NewMatrix(Samples, Samples)
