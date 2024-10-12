@@ -27,13 +27,13 @@ func main() {
 	rng := rand.New(rand.NewSource(1))
 	inputs := NewMatrix(Samples, Samples)
 	for i := 0; i < Samples*Samples; i++ {
-		inputs.Data = append(inputs.Data, complex(rng.Float64(), 0))
+		inputs.Data = append(inputs.Data, rng.Float64())
 	}
 	for i := 0; i < 33; i++ {
 		outputs := Process(rng, inputs)
 		min, max := math.MaxFloat64, -math.MaxFloat64
 		for _, value := range outputs.Data {
-			v := real(value)
+			v := value
 			if v < min {
 				min = v
 			}
@@ -46,7 +46,7 @@ func main() {
 		for j := 0; j < outputs.Rows; j++ {
 			rowEntropy := 0.0
 			for k := 0; k < outputs.Cols; k++ {
-				value := real(outputs.Data[j*outputs.Cols+k])
+				value := outputs.Data[j*outputs.Cols+k]
 				if value == 0 {
 					continue
 				}
@@ -98,7 +98,7 @@ func main() {
 				value = 1
 			}
 			for j := 0; j < Samples*Samples/2; j++ {
-				outputs.Data[rng.Intn(Samples*Samples)] *= complex(value, 0)
+				outputs.Data[rng.Intn(Samples*Samples)] *= value
 			}
 		}
 		inputs = outputs

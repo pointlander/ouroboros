@@ -7,7 +7,6 @@ package main
 import (
 	"fmt"
 	"math"
-	"math/cmplx"
 	"math/rand"
 	"runtime"
 
@@ -25,13 +24,13 @@ const (
 type Matrix struct {
 	Cols int
 	Rows int
-	Data []complex128
+	Data []float64
 }
 
 // NewMatrix creates a new float64 matrix
-func NewMatrix(cols, rows int, data ...complex128) Matrix {
+func NewMatrix(cols, rows int, data ...float64) Matrix {
 	if data == nil {
-		data = make([]complex128, 0, cols*rows)
+		data = make([]float64, 0, cols*rows)
 	}
 	return Matrix{
 		Cols: cols,
@@ -45,7 +44,7 @@ func NewZeroMatrix(cols, rows int) Matrix {
 	return Matrix{
 		Cols: cols,
 		Rows: rows,
-		Data: make([]complex128, cols*rows),
+		Data: make([]float64, cols*rows),
 	}
 }
 
@@ -72,14 +71,13 @@ func (g RandomMatrix) Sample() Matrix {
 	sample := NewMatrix(g.Cols, g.Rows)
 	for i := 0; i < g.Cols*g.Rows; i++ {
 		a := rng.NormFloat64() * factor
-		//b := rng.NormFloat64() * factor
-		sample.Data = append(sample.Data, complex(a, 0))
+		sample.Data = append(sample.Data, a)
 	}
 	return sample
 }
 
 // Dot computes the dot product
-func Dot(x, y []complex128) (z complex128) {
+func Dot(x, y []float64) (z float64) {
 	for i := range x {
 		z += x[i] * y[i]
 	}
@@ -95,7 +93,7 @@ func (m Matrix) MulT(n Matrix) Matrix {
 	o := Matrix{
 		Cols: m.Rows,
 		Rows: n.Rows,
-		Data: make([]complex128, 0, m.Rows*n.Rows),
+		Data: make([]float64, 0, m.Rows*n.Rows),
 	}
 	lenn, lenm := len(n.Data), len(m.Data)
 	for i := 0; i < lenn; i += columns {
@@ -113,19 +111,19 @@ func PageRank(x, y Matrix) []float64 {
 	graph := pagerank.NewGraph()
 	for i := 0; i < y.Rows; i++ {
 		yy := y.Data[i*y.Cols : (i+1)*y.Cols]
-		aa := complex(0.0, 0.0)
+		aa := 0.0
 		for _, v := range yy {
 			aa += v * v
 		}
-		aa = cmplx.Sqrt(aa)
+		aa = math.Sqrt(aa)
 		for j := 0; j < x.Rows; j++ {
 			xx := x.Data[j*x.Cols : (j+1)*x.Cols]
-			bb := complex(0.0, 0.0)
+			bb := 0.0
 			for _, v := range xx {
 				bb += v * v
 			}
-			bb = cmplx.Sqrt(bb)
-			d := cmplx.Abs(Dot(yy, xx) / (aa * bb))
+			bb = math.Sqrt(bb)
+			d := math.Abs(Dot(yy, xx) / (aa * bb))
 			graph.Link(uint32(i), uint32(j), d)
 		}
 	}
@@ -195,7 +193,7 @@ func Process(rng *rand.Rand, input Matrix) Matrix {
 	outputs := NewZeroMatrix(Samples, Samples)
 	for i := range samples {
 		for j, value := range samples[i].Ranks {
-			outputs.Data[i*Samples+j] = complex(value, 0)
+			outputs.Data[i*Samples+j] = value
 		}
 	}
 	return outputs
