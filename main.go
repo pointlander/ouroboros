@@ -7,6 +7,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image"
 	"math"
 	"math/rand"
 	"sort"
@@ -60,7 +61,7 @@ func (n Neuron) Light(seed int64) {
 		case sense := <-n.Input:
 			for j := range outputs.Data {
 				if rng.Intn(2) == 0 {
-					outputs.Data[j] = sense[rng.Intn(len(sense))] / 256
+					outputs.Data[j] = sense[rng.Intn(len(sense))]
 				}
 			}
 
@@ -105,6 +106,13 @@ func (n Neuron) Light(seed int64) {
 	}
 }
 
+// Frame is a video frame
+type Frame struct {
+	Frame *image.YCbCr
+	Thumb image.Image
+	Gray  *image.Gray
+}
+
 func main() {
 	flag.Parse()
 
@@ -123,8 +131,24 @@ func main() {
 		Input: make(chan []float64, 8),
 		Name:  "forward",
 	}
+	camera := NewV4LCamera()
 
 	go left.Light(1)
 	go right.Light(2)
-	forward.Light(3)
+	go forward.Light(3)
+	go camera.Start("/dev/video0")
+
+	for img := range camera.Images {
+		width := img.Gray.Bounds().Max.X
+		height := img.Gray.Bounds().Max.Y
+		dat := make([]float64, width*height)
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				dat[y*width+x] = float64(img.Gray.GrayAt(x, y).Y) / 255
+			}
+		}
+		left.Input <- dat
+		right.Input <- dat
+		forward.Input <- dat
+	}
 }
