@@ -29,6 +29,8 @@ type Neuron struct {
 var (
 	// FlagPlot plot the results as a histogram
 	FlagPlot = flag.Bool("plot", false, "plot the results as a histogram")
+	// FlagMaze maze mode
+	FlagMaze = flag.Bool("maze", false, "maze mode")
 )
 
 // Light lights the neuron
@@ -112,8 +114,18 @@ type Frame struct {
 	Gray  *image.Gray
 }
 
+// Maze is maze mode
+func Maze() {
+
+}
+
 func main() {
 	flag.Parse()
+
+	if *FlagMaze {
+		Maze()
+		return
+	}
 
 	speech := htgotts.Speech{Folder: "audio", Language: voices.English, Handler: &handlers.MPlayer{}}
 	speech.Speak("Starting...")
