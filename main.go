@@ -115,7 +115,7 @@ type Frame struct {
 func main() {
 	flag.Parse()
 
-	speech := htgotts.Speech{Folder: "audio", Language: voices.English, Handler: &handlers.Native{}}
+	speech := htgotts.Speech{Folder: "audio", Language: voices.English, Handler: &handlers.MPlayer{}}
 	speech.Speak("Starting...")
 
 	left := Neuron{
