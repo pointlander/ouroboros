@@ -1,6 +1,6 @@
 module github.com/pointlander/ouroboros
 
-go 1.22.4
+go 1.22
 
 require (
 	git.sr.ht/~sbinet/gg v0.5.0 // indirect

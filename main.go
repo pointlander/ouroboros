@@ -32,8 +32,7 @@ var (
 )
 
 // Light lights the neuron
-func (n Neuron) Light(seed int64) {
-	speech := htgotts.Speech{Folder: "audio", Language: voices.English, Handler: &handlers.Native{}}
+func (n Neuron) Light(seed int64, say chan string) {
 	rng := rand.New(rand.NewSource(seed))
 	inputs := NewMatrix(Samples, Samples)
 	for i := 0; i < Samples*Samples; i++ {
@@ -78,7 +77,7 @@ func (n Neuron) Light(seed int64) {
 			for j := i + 8; j < len(samples); j++ {
 				end := samples[j]
 				if (end - start) < window {
-					speech.Speak(n.Name)
+					say <- n.Name
 					break outer
 				}
 			}
@@ -132,10 +131,16 @@ func main() {
 		Name:  "forward",
 	}
 	camera := NewV4LCamera()
+	say := make(chan string, 8)
+	go func() {
+		for s := range say {
+			speech.Speak(s)
+		}
+	}()
 
-	go left.Light(1)
-	go right.Light(2)
-	go forward.Light(3)
+	go left.Light(1, say)
+	go right.Light(2, say)
+	go forward.Light(3, say)
 	go camera.Start("/dev/video0")
 
 	for img := range camera.Images {
