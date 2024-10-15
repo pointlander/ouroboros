@@ -143,9 +143,9 @@ func Maze() {
 	)
 
 	maze := strings.Split(Puzzle, "\n")
-	randIterations := 0
-	{
-		rng := rand.New(rand.NewSource(1))
+	randIterations := 0.0
+	rng := rand.New(rand.NewSource(1))
+	for i := 0; i < 33; i++ {
 		x, y := int64(15), int64(15)
 		actions := []string{"left", "right", "up", "down"}
 		for {
@@ -170,13 +170,15 @@ func Maze() {
 			}
 			randIterations++
 			if x == 0 || y == 0 || x == width-1 || y == height-1 {
-				fmt.Println("done", x, y, randIterations)
+				//fmt.Println("done", x, y, randIterations)
 				break
 			} else {
-				fmt.Println(x, y)
+				//fmt.Println(x, y)
 			}
 		}
 	}
+	randIterations /= 33
+	fmt.Println("randIterations", randIterations)
 
 	left := Neuron{
 		Input: make(chan []float64, 8),
