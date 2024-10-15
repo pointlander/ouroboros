@@ -13,7 +13,7 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"sync/atomic"
+	"sync"
 
 	htgotts "github.com/hegedustibor/htgo-tts"
 	handlers "github.com/hegedustibor/htgo-tts/handlers"
@@ -160,36 +160,45 @@ func Maze() {
 	}
 
 	maze := strings.Split(Puzzle, "\n")
+	lock := sync.Mutex{}
 	x, y := int64(15), int64(15)
 	action := make(chan string, 8)
 	go func() {
 		for act := range action {
 			switch act {
 			case "left":
+				lock.Lock()
 				if maze[y][x-1] == '-' {
-					atomic.AddInt64(&x, -1)
+					x -= 1
 				}
+				lock.Unlock()
 			case "right":
+				lock.Lock()
 				if maze[y][x+1] == '-' {
-					atomic.AddInt64(&x, 1)
+					x += 1
 				}
+				lock.Unlock()
 			case "up":
+				lock.Lock()
 				if maze[y-1][x] == '-' {
-					atomic.AddInt64(&y, -1)
+					y -= 1
 				}
+				lock.Unlock()
 			case "down":
+				lock.Lock()
 				if maze[y+1][x] == '-' {
-					atomic.AddInt64(&y, 1)
+					y += 1
 				}
+				lock.Unlock()
 			}
-			xx := atomic.LoadInt64(&x)
-			yy := atomic.LoadInt64(&y)
-			if xx == 0 || yy == 0 || xx == width-1 || yy == height-1 {
-				fmt.Println("done", xx, yy)
+			lock.Lock()
+			if x == 0 || y == 0 || x == width-1 || y == height-1 {
+				fmt.Println("done", x, y)
 				os.Exit(0)
 			} else {
-				fmt.Println(xx, yy)
+				fmt.Println(x, y)
 			}
+			lock.Unlock()
 		}
 	}()
 	go left.Light(1, action)
@@ -208,9 +217,9 @@ func Maze() {
 				}
 			}
 		}
-		xx := atomic.LoadInt64(&x)
-		yy := atomic.LoadInt64(&y)
-		dat[yy*width+xx] = .2
+		lock.Lock()
+		dat[y*width+x] = .2
+		lock.Unlock()
 		//fmt.Println(x, y)
 		/*for yy := 0; yy < height; yy++ {
 			for xx := 0; xx < width; xx++ {
