@@ -243,10 +243,10 @@ func LightMaze(sample int) float64 {
 			if x == 0 || y == 0 || x == width-1 || y == height-1 {
 				fmt.Println("done", x, y)
 				run = false
+				lock.Unlock()
 				break
-			} else {
-				fmt.Println(sample, x, y)
 			}
+			fmt.Println(sample, x, y)
 			lock.Unlock()
 		}
 	}()
