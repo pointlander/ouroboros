@@ -10,7 +10,10 @@ import (
 	"image"
 	"math"
 	"math/rand"
+	"os"
 	"sort"
+	"strings"
+	"sync/atomic"
 
 	htgotts "github.com/hegedustibor/htgo-tts"
 	handlers "github.com/hegedustibor/htgo-tts/handlers"
@@ -134,7 +137,110 @@ const Puzzle = `********-********
 
 // Maze is maze mode
 func Maze() {
+	const (
+		width  = 17
+		height = 17
+	)
 
+	left := Neuron{
+		Input: make(chan []float64, 8),
+		Name:  "left",
+	}
+	right := Neuron{
+		Input: make(chan []float64, 8),
+		Name:  "right",
+	}
+	up := Neuron{
+		Input: make(chan []float64, 8),
+		Name:  "up",
+	}
+	down := Neuron{
+		Input: make(chan []float64, 8),
+		Name:  "down",
+	}
+
+	maze := strings.Split(Puzzle, "\n")
+	x, y := int64(15), int64(15)
+	action := make(chan string, 8)
+	go func() {
+		for act := range action {
+			switch act {
+			case "left":
+				if maze[y][x-1] == '-' {
+					atomic.AddInt64(&x, -1)
+				}
+			case "right":
+				if maze[y][x+1] == '-' {
+					atomic.AddInt64(&x, 1)
+				}
+			case "up":
+				if maze[y-1][x] == '-' {
+					atomic.AddInt64(&y, -1)
+				}
+			case "down":
+				if maze[y+1][x] == '-' {
+					atomic.AddInt64(&y, 1)
+				}
+			}
+			xx := atomic.LoadInt64(&x)
+			yy := atomic.LoadInt64(&y)
+			if xx == 0 || yy == 0 || xx == width-1 || yy == height-1 {
+				fmt.Println("done", xx, yy)
+				os.Exit(0)
+			} else {
+				fmt.Println(xx, yy)
+			}
+		}
+	}()
+	go left.Light(1, action)
+	go right.Light(2, action)
+	go up.Light(3, action)
+	go down.Light(4, action)
+
+	for {
+		dat := make([]float64, width*height)
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				if maze[y][x] == '*' {
+					dat[y*width+x] = .2
+				} else if maze[y][x] == '-' {
+					dat[y*width+x] = .1
+				}
+			}
+		}
+		xx := atomic.LoadInt64(&x)
+		yy := atomic.LoadInt64(&y)
+		dat[yy*width+xx] = .2
+		//fmt.Println(x, y)
+		/*for yy := 0; yy < height; yy++ {
+			for xx := 0; xx < width; xx++ {
+				if int(y) == yy && int(x) == xx {
+					fmt.Printf("+")
+				} else if maze[yy][xx] == '*' {
+					fmt.Printf("*")
+				} else if maze[yy][xx] == '-' {
+					fmt.Printf(" ")
+				}
+			}
+			fmt.Println()
+		}*/
+		select {
+		case left.Input <- dat:
+		default:
+		}
+		select {
+		case right.Input <- dat:
+		default:
+		}
+		select {
+		case up.Input <- dat:
+		default:
+		}
+		select {
+		case down.Input <- dat:
+		default:
+		}
+	}
 }
 
 func main() {
