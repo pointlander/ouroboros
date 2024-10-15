@@ -142,6 +142,42 @@ func Maze() {
 		height = 17
 	)
 
+	maze := strings.Split(Puzzle, "\n")
+	randIterations := 0
+	{
+		rng := rand.New(rand.NewSource(1))
+		x, y := int64(15), int64(15)
+		actions := []string{"left", "right", "up", "down"}
+		for {
+			act := actions[rng.Intn(len(actions))]
+			switch act {
+			case "left":
+				if maze[y][x-1] == '-' {
+					x -= 1
+				}
+			case "right":
+				if maze[y][x+1] == '-' {
+					x += 1
+				}
+			case "up":
+				if maze[y-1][x] == '-' {
+					y -= 1
+				}
+			case "down":
+				if maze[y+1][x] == '-' {
+					y += 1
+				}
+			}
+			randIterations++
+			if x == 0 || y == 0 || x == width-1 || y == height-1 {
+				fmt.Println("done", x, y, randIterations)
+				break
+			} else {
+				fmt.Println(x, y)
+			}
+		}
+	}
+
 	left := Neuron{
 		Input: make(chan []float64, 8),
 		Name:  "left",
@@ -159,11 +195,11 @@ func Maze() {
 		Name:  "down",
 	}
 
-	maze := strings.Split(Puzzle, "\n")
 	lock := sync.Mutex{}
 	x, y := int64(15), int64(15)
 	action := make(chan string, 8)
 	go func() {
+		iterations := 0
 		for act := range action {
 			switch act {
 			case "left":
@@ -191,9 +227,12 @@ func Maze() {
 				}
 				lock.Unlock()
 			}
+			iterations++
 			lock.Lock()
 			if x == 0 || y == 0 || x == width-1 || y == height-1 {
 				fmt.Println("done", x, y)
+				fmt.Println("randIterations", randIterations)
+				fmt.Println("iterations", iterations)
 				os.Exit(0)
 			} else {
 				fmt.Println(x, y)
