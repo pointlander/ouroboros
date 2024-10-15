@@ -10,7 +10,6 @@ import (
 	"image"
 	"math"
 	"math/rand"
-	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -27,6 +26,7 @@ import (
 type Neuron struct {
 	Input chan []float64
 	Name  string
+	Run   *bool
 }
 
 var (
@@ -44,7 +44,7 @@ func (n Neuron) Light(seed int64, say chan string) {
 		inputs.Data = append(inputs.Data, rng.Float64())
 	}
 	i := 0
-	for {
+	for *n.Run {
 		outputs := Process(rng, inputs)
 		samples := make(plotter.Values, 0, 8)
 		entropy := 0.0
@@ -135,15 +135,15 @@ const Puzzle = `********-********
 *---------------*
 *****************`
 
-// Maze is maze mode
-func Maze() {
+// RandomMaze is random maze search
+func RandomMaze() float64 {
 	const (
 		width  = 17
 		height = 17
 	)
 
 	maze := strings.Split(Puzzle, "\n")
-	randIterations := 0.0
+	iterations := 0.0
 	rng := rand.New(rand.NewSource(1))
 	for i := 0; i < 33; i++ {
 		x, y := int64(15), int64(15)
@@ -168,40 +168,49 @@ func Maze() {
 					y += 1
 				}
 			}
-			randIterations++
+			iterations++
 			if x == 0 || y == 0 || x == width-1 || y == height-1 {
-				//fmt.Println("done", x, y, randIterations)
 				break
-			} else {
-				//fmt.Println(x, y)
 			}
 		}
 	}
-	randIterations /= 33
-	fmt.Println("randIterations", randIterations)
+	return iterations / 33
+}
 
+// LightMaze is the light base maze solvers
+func LightMaze(sample int) float64 {
+	const (
+		width  = 17
+		height = 17
+	)
+	maze := strings.Split(Puzzle, "\n")
+	run := true
 	left := Neuron{
 		Input: make(chan []float64, 8),
 		Name:  "left",
+		Run:   &run,
 	}
 	right := Neuron{
 		Input: make(chan []float64, 8),
 		Name:  "right",
+		Run:   &run,
 	}
 	up := Neuron{
 		Input: make(chan []float64, 8),
 		Name:  "up",
+		Run:   &run,
 	}
 	down := Neuron{
 		Input: make(chan []float64, 8),
 		Name:  "down",
+		Run:   &run,
 	}
 
 	lock := sync.Mutex{}
 	x, y := int64(15), int64(15)
 	action := make(chan string, 8)
+	iterations := 0.0
 	go func() {
-		iterations := 0
 		for act := range action {
 			switch act {
 			case "left":
@@ -233,11 +242,10 @@ func Maze() {
 			lock.Lock()
 			if x == 0 || y == 0 || x == width-1 || y == height-1 {
 				fmt.Println("done", x, y)
-				fmt.Println("randIterations", randIterations)
-				fmt.Println("iterations", iterations)
-				os.Exit(0)
+				run = false
+				break
 			} else {
-				fmt.Println(x, y)
+				fmt.Println(sample, x, y)
 			}
 			lock.Unlock()
 		}
@@ -247,7 +255,7 @@ func Maze() {
 	go up.Light(3, action)
 	go down.Light(4, action)
 
-	for {
+	for run {
 		dat := make([]float64, width*height)
 		for y := 0; y < height; y++ {
 			for x := 0; x < width; x++ {
@@ -291,6 +299,20 @@ func Maze() {
 		default:
 		}
 	}
+
+	return iterations
+}
+
+// Maze is maze mode
+func Maze() {
+	randIterations := RandomMaze()
+	iterations := 0.0
+	fmt.Println("random iterations", randIterations)
+	for i := 0; i < 8; i++ {
+		iterations += LightMaze(i)
+	}
+	fmt.Println("random iterations", randIterations)
+	fmt.Println("light iterations", iterations/8)
 }
 
 func main() {
